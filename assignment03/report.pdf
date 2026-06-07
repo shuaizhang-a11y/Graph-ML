@@ -1,0 +1,730 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R] /Count 7 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 2591 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+72 760 Td
+(Assignment 03 Report) Tj
+T*
+() Tj
+T*
+(Building Graph Representation and Node Classification) Tj
+T*
+() Tj
+T*
+(Course: Graph Machine Learning) Tj
+T*
+(Assignment: Assignment 03, Building Graph Representation) Tj
+T*
+(Date: 8 June 2026) Tj
+T*
+() Tj
+T*
+(Abstract) Tj
+T*
+() Tj
+T*
+(This assignment converts a Rhino-exported architectural model into a Building) Tj
+T*
+(Graph Representation \(BGR\) and uses it for graph machine learning. Four OBJ) Tj
+T*
+(files represent the main semantic layers of the building: ground slab,) Tj
+T*
+(columns, office volumes, and core. These parts are imported into TopologicPy,) Tj
+T*
+(converted into topological cells, labelled with semantic dictionaries, merged) Tj
+T*
+(into a CellComplex, and transformed into an adjacency graph. The exported) Tj
+T*
+(BGR contains one graph, 55 nodes, and 286 directed edge records. Because graph) Tj
+T*
+(classification requires many building graphs, the single exported building is) Tj
+T*
+(instead used for node classification. A node-classification dataset is derived) Tj
+T*
+(from the BGR, mapping the original cell types to contiguous labels and using) Tj
+T*
+(normalised node coordinates as features. The resulting model demonstrates the) Tj
+T*
+(complete workflow from geometry to graph dataset, training, evaluation, and) Tj
+T*
+(model export.) Tj
+T*
+() Tj
+T*
+(1. Introduction) Tj
+T*
+() Tj
+T*
+(Architectural geometry contains both shape and relationship. A building can be) Tj
+T*
+(modelled as a set of volumes, but it can also be represented as a graph whose) Tj
+T*
+(nodes describe spatial or construction elements and whose edges describe) Tj
+T*
+(adjacency. This graph representation makes the model suitable for graph) Tj
+T*
+(machine learning.) Tj
+T*
+() Tj
+T*
+(The aim of this assignment is to:) Tj
+T*
+() Tj
+T*
+(1. Import a layered Rhino OBJ model into TopologicPy.) Tj
+T*
+(2. Assign semantic categories to each building component.) Tj
+T*
+(3. Build a merged topological model and convert it into a graph.) Tj
+T*
+(4. Export the graph as CSV files.) Tj
+T*
+(5. Train a graph machine learning workflow on the exported data.) Tj
+T*
+() Tj
+T*
+(The initial assignment notebook was graph-classification oriented. However,) Tj
+T*
+(only one building graph was exported. Since graph classification requires) Tj
+T*
+(multiple labelled graphs, this work adapts the dataset into a node) Tj
+T*
+(classification task using the 55 nodes inside the generated BGR graph.) Tj
+T*
+() Tj
+T*
+(2. Input Data) Tj
+T*
+() Tj
+T*
+(The building model is stored in assignment03/obj as four OBJ files:) Tj
+T*
+0 -18 Td
+(Page 1) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1945 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+72 760 Td
+() Tj
+T*
+(File | Role | Size) Tj
+T*
+(--- | --- | ---:) Tj
+T*
+(ground.obj | Ground slab or podium | 10,528 bytes) Tj
+T*
+(columns.obj | Structural columns | 659,842 bytes) Tj
+T*
+(offices.obj | Office volumes | 50,879 bytes) Tj
+T*
+(core.obj | Core and circulation volume | 2,225 bytes) Tj
+T*
+() Tj
+T*
+(Each OBJ layer is imported separately. This preserves the semantic distinction) Tj
+T*
+(between building parts before they are merged into one topological model.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Figure 1. Coloured TopologicPy model exported as topology.png.) Tj
+T*
+() Tj
+T*
+(3. Methodology) Tj
+T*
+() Tj
+T*
+(3.1 OBJ Import) Tj
+T*
+() Tj
+T*
+(The BGR creation notebook is:) Tj
+T*
+() Tj
+T*
+(classfications/S06-13A GML Creating BGR Graph - dan.ipynb) Tj
+T*
+() Tj
+T*
+(The setup cell locates the OBJ folder automatically using candidate paths, so) Tj
+T*
+(the notebook can run from the repository root or from the notebook directory.) Tj
+T*
+(The OBJ files are imported with Topology.ByOBJPath:) Tj
+T*
+() Tj
+T*
+(ground_objs = Topology.ByOBJPath\(str\(SUPPORT_DIR / "ground.obj"\), transposeAxes=False\)) Tj
+T*
+(column_objs = Topology.ByOBJPath\(str\(SUPPORT_DIR / "columns.obj"\), transposeAxes=False\)) Tj
+T*
+(office_objs = Topology.ByOBJPath\(str\(SUPPORT_DIR / "offices.obj"\), transposeAxes=False\)) Tj
+T*
+(core_objs = Topology.ByOBJPath\(str\(SUPPORT_DIR / "core.obj"\), transposeAxes=False\)) Tj
+T*
+() Tj
+T*
+(3.2 Semantic Cell Creation) Tj
+T*
+() Tj
+T*
+(For each imported object group, faces are extracted, flattened, self-merged,) Tj
+T*
+(and converted into cells. Each cell receives a dictionary containing:) Tj
+T*
+() Tj
+T*
+(- cell_type) Tj
+T*
+(- cell_name) Tj
+T*
+(- cell_color) Tj
+T*
+() Tj
+T*
+(The category mapping is:) Tj
+T*
+() Tj
+T*
+(Original cell type | Name | Colour) Tj
+T*
+(---: | --- | ---) Tj
+T*
+(0 | ground | green) Tj
+T*
+(1 | column | gray) Tj
+T*
+(3 | office | blue) Tj
+T*
+(4 | core | red) Tj
+T*
+0 -18 Td
+(Page 2) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1434 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+72 760 Td
+() Tj
+T*
+(The resulting cell counts are:) Tj
+T*
+() Tj
+T*
+(Category | Cells) Tj
+T*
+(--- | ---:) Tj
+T*
+(Ground | 1) Tj
+T*
+(Column | 36) Tj
+T*
+(Office | 17) Tj
+T*
+(Core | 1) Tj
+T*
+(Total | 55) Tj
+T*
+() Tj
+T*
+(3.3 CellComplex and Dictionary Transfer) Tj
+T*
+() Tj
+T*
+(The cells are merged into one CellComplex:) Tj
+T*
+() Tj
+T*
+(model = Topology.SelfMerge\(Cluster.ByTopologies\(all_cells\)\)) Tj
+T*
+() Tj
+T*
+(Dictionaries are transferred from internal selector vertices back to the cells:) Tj
+T*
+() Tj
+T*
+(model = Topology.TransferDictionariesBySelectors\() Tj
+T*
+(    model,) Tj
+T*
+(    selectors,) Tj
+T*
+(    tranCells=True,) Tj
+T*
+(\)) Tj
+T*
+() Tj
+T*
+(This step is important because the later graph vertices inherit semantic) Tj
+T*
+(information from the cells.) Tj
+T*
+() Tj
+T*
+(3.4 Graph Construction and Feature Engineering) Tj
+T*
+() Tj
+T*
+(The adjacency graph is created from the merged topology:) Tj
+T*
+() Tj
+T*
+(graph = Graph.ByTopology\(model\)) Tj
+T*
+(vertices = Graph.Vertices\(graph\)) Tj
+T*
+() Tj
+T*
+(Each vertex receives a one-hot encoding of its cell_type:) Tj
+T*
+() Tj
+T*
+(Feature | Meaning) Tj
+T*
+(feature_00 | ground) Tj
+T*
+(feature_01 | column) Tj
+T*
+(feature_02 | plinth / unused class) Tj
+T*
+(feature_03 | office) Tj
+T*
+(feature_04 | core) Tj
+T*
+() Tj
+T*
+(The graph is exported to CSV using Graph.ExportToCSV.) Tj
+T*
+() Tj
+T*
+(4. Exported BGR Dataset) Tj
+T*
+() Tj
+T*
+0 -18 Td
+(Page 3) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 1652 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+72 760 Td
+(The initial BGR dataset is stored in:) Tj
+T*
+() Tj
+T*
+(assignment03/bgr_dataset) Tj
+T*
+() Tj
+T*
+(It contains:) Tj
+T*
+() Tj
+T*
+(File | Rows | Description) Tj
+T*
+(--- | ---: | ---) Tj
+T*
+(graphs.csv | 1 | One building graph) Tj
+T*
+(nodes.csv | 55 | Graph nodes derived from cells) Tj
+T*
+(edges.csv | 286 | Directed adjacency edge records) Tj
+T*
+(meta.yaml | - | Dataset metadata) Tj
+T*
+() Tj
+T*
+(The single row in graphs.csv is:) Tj
+T*
+() Tj
+T*
+(graph_id,label) Tj
+T*
+(0,0) Tj
+T*
+() Tj
+T*
+(This confirms that the export succeeded, but it also shows why graph) Tj
+T*
+(classification is not appropriate for this dataset: there is only one graph) Tj
+T*
+(sample and only one graph label.) Tj
+T*
+() Tj
+T*
+(5. Node Classification Dataset) Tj
+T*
+() Tj
+T*
+(To create a valid machine-learning task from the available data, a second) Tj
+T*
+(dataset is generated:) Tj
+T*
+() Tj
+T*
+(assignment03/bgr_node_dataset) Tj
+T*
+() Tj
+T*
+(The notebook used for this task is:) Tj
+T*
+() Tj
+T*
+(classfications/S06-13 Node Classification - DAN.ipynb) Tj
+T*
+() Tj
+T*
+(The original BGR export stores node category information as one-hot features.) Tj
+T*
+(For node classification, those one-hot values are converted back into labels.) Tj
+T*
+(The labels must be contiguous integers for PyTorch, so the original cell types) Tj
+T*
+(are remapped as follows:) Tj
+T*
+() Tj
+T*
+(Original cell type | Training label | Name) Tj
+T*
+(---: | ---: | ---) Tj
+T*
+(0 | 0 | ground) Tj
+T*
+(1 | 1 | column) Tj
+T*
+(3 | 2 | office) Tj
+T*
+(4 | 3 | core) Tj
+T*
+() Tj
+T*
+(The final node label distribution is:) Tj
+T*
+() Tj
+T*
+(Label | Name | Nodes) Tj
+T*
+0 -18 Td
+(Page 4) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 1447 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+72 760 Td
+(---: | --- | ---:) Tj
+T*
+(0 | ground | 1) Tj
+T*
+(1 | column | 36) Tj
+T*
+(2 | office | 17) Tj
+T*
+(3 | core | 1) Tj
+T*
+(Total |  | 55) Tj
+T*
+() Tj
+T*
+(The one-hot category columns are removed from the input features to avoid) Tj
+T*
+(leaking the answer into the model. The model instead uses normalised node) Tj
+T*
+(coordinates:) Tj
+T*
+() Tj
+T*
+(- feat_x) Tj
+T*
+(- feat_y) Tj
+T*
+(- feat_z) Tj
+T*
+() Tj
+T*
+(The graph edges still provide neighbourhood information for GraphSAGE.) Tj
+T*
+() Tj
+T*
+(The split masks are:) Tj
+T*
+() Tj
+T*
+(Split | Nodes) Tj
+T*
+(--- | ---:) Tj
+T*
+(Training | 39) Tj
+T*
+(Validation | 8) Tj
+T*
+(Testing | 8) Tj
+T*
+() Tj
+T*
+(Rare classes represented by only one node are kept in training because they) Tj
+T*
+(cannot be meaningfully split across training, validation, and testing.) Tj
+T*
+() Tj
+T*
+(6. Model Training) Tj
+T*
+() Tj
+T*
+(The node classification model uses TopologicPy's PyG interface with a) Tj
+T*
+(GraphSAGE convolutional architecture. The main settings are:) Tj
+T*
+() Tj
+T*
+(Setting | Value) Tj
+T*
+(Prediction level | node) Tj
+T*
+(Task | classification) Tj
+T*
+(Convolution | GraphSAGE) Tj
+T*
+(Hidden dimensions | \(64, 64\)) Tj
+T*
+(Activation | ReLU) Tj
+T*
+(Dropout | 0.20) Tj
+T*
+(Optimiser | AdamW) Tj
+T*
+(Learning rate | 0.001) Tj
+T*
+(Epochs | 100) Tj
+T*
+() Tj
+T*
+(The trained model is saved as:) Tj
+T*
+() Tj
+T*
+(assignment03/bgr_node_model.pt) Tj
+T*
+() Tj
+T*
+0 -18 Td
+(Page 5) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 2551 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+72 760 Td
+(The verified run completed 100 epochs and produced:) Tj
+T*
+() Tj
+T*
+(Metric | Value) Tj
+T*
+(--- | ---:) Tj
+T*
+(Final training loss | 0.0543) Tj
+T*
+(Final validation loss | 0.0913) Tj
+T*
+(Validation accuracy | 1.0000) Tj
+T*
+(Test accuracy | 1.0000) Tj
+T*
+() Tj
+T*
+(These metrics should be interpreted carefully. The dataset is very small and) Tj
+T*
+(imbalanced, and the validation and test masks cannot contain the rare ground) Tj
+T*
+(and core classes. Therefore, the result demonstrates a working pipeline rather) Tj
+T*
+(than a generalisable classifier.) Tj
+T*
+() Tj
+T*
+(7. Discussion) Tj
+T*
+() Tj
+T*
+(The BGR workflow was successful. The assignment produced a valid topological) Tj
+T*
+(model, transferred semantic categories to cells, generated an adjacency graph,) Tj
+T*
+(and exported the dataset to CSV. The key modelling issue was not export) Tj
+T*
+(failure, but task selection. A single building graph cannot train a graph-level) Tj
+T*
+(classifier because graph classification learns from differences between many) Tj
+T*
+(graphs. The available data is more naturally suited to node classification,) Tj
+T*
+(because the single graph contains 55 labelled elements.) Tj
+T*
+() Tj
+T*
+(The node classification workflow demonstrates how graph machine learning can) Tj
+T*
+(be applied even when only one building is available. Each node represents a) Tj
+T*
+(semantic building component, and the graph structure describes adjacency) Tj
+T*
+(between components. However, a more robust experiment would require either:) Tj
+T*
+() Tj
+T*
+(- more buildings for graph classification, or) Tj
+T*
+(- more labelled nodes and more balanced categories for node classification.) Tj
+T*
+() Tj
+T*
+(8. Conclusion) Tj
+T*
+() Tj
+T*
+(This assignment converts layered architectural OBJ geometry into a Building) Tj
+T*
+(Graph Representation and uses it for graph machine learning. The generated BGR) Tj
+T*
+(contains one graph, 55 nodes, and 286 directed edge records. Since only one) Tj
+T*
+(graph is available, the workflow is adapted from graph classification to node) Tj
+T*
+(classification. A second dataset is generated with corrected node labels and) Tj
+T*
+(normalised coordinate features, and a GraphSAGE model is trained and saved.) Tj
+T*
+() Tj
+T*
+(The final deliverables demonstrate the complete pipeline:) Tj
+T*
+() Tj
+T*
+(1. Rhino OBJ geometry import.) Tj
+T*
+(2. Semantic cell labelling.) Tj
+T*
+(3. TopologicPy CellComplex creation.) Tj
+T*
+(4. BGR graph export.) Tj
+T*
+(5. Node classification dataset preparation.) Tj
+T*
+0 -18 Td
+(Page 6) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 405 >>
+stream
+BT
+/F1 10 Tf
+14 TL
+72 760 Td
+(6. GraphSAGE training and evaluation.) Tj
+T*
+() Tj
+T*
+(The work confirms that the BGR representation is suitable for machine learning) Tj
+T*
+(preparation, while also showing that the choice between graph classification) Tj
+T*
+(and node classification depends directly on the number and structure of the) Tj
+T*
+(available graph samples.) Tj
+T*
+() Tj
+T*
+0 -18 Td
+(Page 7) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 16 0 R >>
+endobj
+xref
+0 18
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000155 00000 n 
+0000000225 00000 n 
+0000002868 00000 n 
+0000002994 00000 n 
+0000004991 00000 n 
+0000005117 00000 n 
+0000006603 00000 n 
+0000006729 00000 n 
+0000008434 00000 n 
+0000008562 00000 n 
+0000010062 00000 n 
+0000010190 00000 n 
+0000012794 00000 n 
+0000012922 00000 n 
+0000013379 00000 n 
+trailer
+<< /Size 18 /Root 1 0 R >>
+startxref
+13507
+%%EOF
